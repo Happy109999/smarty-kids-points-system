@@ -1,35 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Register - SmartyPants Wallet</title>
+  <title>Login - SmartyPants Wallet</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; }
-    input, select, button { display: block; margin: 0.5rem 0; padding: 0.5rem; }
+    input, button { display: block; margin: 0.5rem 0; padding: 0.5rem; }
+    #signupBtn { margin-top: 1rem; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    #signupBtn:hover { background-color: #45a049; }
   </style>
 </head>
 <body>
-  <h1>Register for SmartyPants Wallet</h1>
+  <h1>SmartyPants Wallet Login</h1>
 
-  <input id="name" type="text" placeholder="Full Name" required />
-  <input id="email" type="email" placeholder="Email" required />
-  <input id="password" type="password" placeholder="Password" required />
-  
-  <label for="role">I am a:</label>
-  <select id="role" required>
-    <option value="" disabled selected>Select role</option>
-    <option value="student">Student</option>
-    <option value="teacher">Teacher</option>
-  </select>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button id="emailLoginBtn">Login with Email</button>
+  <hr>
+  <button id="googleLoginBtn">Sign in with Google</button>
 
-  <button id="registerBtn">Register</button>
+  <button id="signupBtn">Sign Up</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAFI1haj8xAXQ3R70Sfn6q-4X9TYt2UrTs",
@@ -44,36 +41,23 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    document.getElementById("registerBtn").onclick = async () => {
-      const name = document.getElementById("name").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const role = document.getElementById("role").value;
+    async function redirectBasedOnRole(user) {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-      if (!name || !email || !password || !role) {
-        alert("Please fill all fields and select a role.");
+      if (!userSnap.exists()) {
+        alert("⚠️ User data not found in Firestore.");
         return;
       }
 
-      try {
-        // Create user in Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+      const role = userSnap.data().role;
 
-        // Save user info and role in Firestore
-        await setDoc(doc(db, "users", user.uid), {
-          name,
-          email,
-          role,
-          spkBalance: 0 // start with zero balance
-        });
-
-        alert("Registration successful! You can now log in.");
-        window.location.href = "index.html"; // send them to login page
-      } catch (error) {
-        alert("Registration failed: " + error.message);
+      if (role === "teacher") {
+        window.location.href = "teacher.html";
+      } else {
+        window.location.href = "student.html";
       }
-    };
-  </script>
-</body>
-</html>
+    }
+
+    document.getElementById("emailLoginBtn").onclick = async (
+
