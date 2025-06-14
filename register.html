@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register - SmartyPants Wallet</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    input, select, button { display: block; margin: 0.5rem 0; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Register for SmartyPants Wallet</h1>
+
+  <input id="name" type="text" placeholder="Full Name" required />
+  <input id="email" type="email" placeholder="Email" required />
+  <input id="password" type="password" placeholder="Password" required />
+  
+  <label for="role">I am a:</label>
+  <select id="role" required>
+    <option value="" disabled selected>Select role</option>
+    <option value="student">Student</option>
+    <option value="teacher">Teacher</option>
+  </select>
+
+  <button id="registerBtn">Register</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFI1haj8xAXQ3R70Sfn6q-4X9TYt2UrTs",
+      authDomain: "smartypants-kids-pointsystem.firebaseapp.com",
+      projectId: "smartypants-kids-pointsystem",
+      storageBucket: "smartypants-kids-pointsystem.firebasestorage.app",
+      messagingSenderId: "111102049554",
+      appId: "1:111102049554:web:8f8feb81d3a5813dcc07cb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.getElementById("registerBtn").onclick = async () => {
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      if (!name || !email || !password || !role) {
+        alert("Please fill all fields and select a role.");
+        return;
+      }
+
+      try {
+        // Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Save user info and role in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          name,
+          email,
+          role,
+          spkBalance: 0 // start with zero balance
+        });
+
+        alert("Registration successful! You can now log in.");
+        window.location.href = "index.html"; // send them to login page
+      } catch (error) {
+        alert("Registration failed: " + error.message);
+      }
+    };
+  </script>
+</body>
+</html>
