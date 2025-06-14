@@ -4,13 +4,14 @@
   <title>Login - SmartyPants Wallet</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; }
     input, button { display: block; margin: 0.5rem 0; padding: 0.5rem; }
   </style>
 </head>
 <body>
-  <h1>Login to SmartyPants Wallet</h1>
+  <h1>SmartyPants Wallet Login</h1>
 
   <input id="email" type="email" placeholder="Email" />
   <input id="password" type="password" placeholder="Password" />
@@ -20,7 +21,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAFI1haj8xAXQ3R70Sfn6q-4X9TYt2UrTs",
@@ -33,14 +35,33 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    async function redirectBasedOnRole(user) {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        alert("⚠️ User data not found in Firestore.");
+        return;
+      }
+
+      const role = userSnap.data().role;
+
+      if (role === "teacher") {
+        window.location.href = "teacher.html";
+      } else {
+        window.location.href = "student.html";
+      }
+    }
 
     document.getElementById("emailLoginBtn").onclick = async () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = "student.html";
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        await redirectBasedOnRole(result.user);
       } catch (error) {
         alert("Login failed: " + error.message);
       }
@@ -49,19 +70,22 @@
     document.getElementById("googleLoginBtn").onclick = async () => {
       const provider = new GoogleAuthProvider();
       try {
-        await signInWithPopup(auth, provider);
-        window.location.href = "student.html";
+        const result = await signInWithPopup(auth, provider);
+        await redirectBasedOnRole(result.user);
       } catch (error) {
         alert("Google login failed: " + error.message);
       }
     };
+
+    // Auto-check if already signed in
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await redirectBasedOnRole(user);
+      }
+    });
   </script>
 </body>
 </html>
 
-
-    ? `Hello, ${user.displayName || "Email User"} (${user.email})`
-    : "Not signed in";
-});
 
 
