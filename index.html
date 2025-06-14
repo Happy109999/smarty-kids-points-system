@@ -1,63 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>SmartyPants Wallet</title>
-  <meta charset="UTF-8">
-  <style>
-    body { font-family: sans-serif; padding: 20px; background-color: #f0f8ff; }
-    #dashboard { display: none; }
-    input, select, button { margin: 5px; padding: 8px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SmartyPants Wallet</title>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background: #f0f4f8;
+    color: #333;
+  }
+  button {
+    background: #4caf50;
+    border: none;
+    padding: 10px 20px;
+    margin: 0.5rem 0;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 4px;
+  }
+  button:hover {
+    background: #45a049;
+  }
+  #user-info {
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+</style>
 
-  <script>
-    // 🔐 Firebase config (replace with your own project settings)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
+
 </head>
-
 <body>
-  <h1>🧠 SmartyPants Wallet</h1>
 
-  <div id="auth">
-    <h3>Login or Register</h3>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <select id="role">
-      <option value="student">Student</option>
-      <option value="teacher">Teacher</option>
-    </select><br />
-    <button onclick="register()">Register</button>
-    <button onclick="login()">Login</button><br>
-    <button onclick="loginWithGoogle()" style="background: #4285F4; color: white;">Sign in with Google</button>
-  </div>
+<h1>Welcome to SmartyPants Wallet</h1>
 
-  <div id="dashboard">
-    <h2>Welcome, <span id="user-name"></span>!</h2>
-    <p><strong>Wallet:</strong> <span id="wallet-address"></span></p>
-    <p><strong>SPK:</strong> <span id="spk-balance">0</span></p>
-    <p><strong>BTC:</strong> <span id="btc-balance">0</span></p>
-    <p><strong>Kindness:</strong> <span id="kindness">0</span></p>
+<button id="sign-in-btn" onclick="signInWithGoogle()">Sign in with Google</button>
+<button id="sign-out-btn" onclick="signOutUser()" style="display:none;">Sign Out</button>
 
-    <button onclick="earnKindness()">💖 Be Kind (+5 SPK)</button>
-    <button onclick="answerQuiz(true)">🧠 Answer Quiz Right (+0.0001 BTC)</button>
-    <button onclick="answerQuiz(false)">🧠 Answer Quiz Wrong</button>
-    <button onclick="buyPerk('Free Time Pass', 10)">🎁 Buy Free Time (10 SPK)</button>
-    <br><br>
-    <button onclick="logout()">🚪 Log Out</button>
-  </div>
+<div id="user-info">Not signed in</div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
+
 
   <script src="script.js"></script>
 </body>
