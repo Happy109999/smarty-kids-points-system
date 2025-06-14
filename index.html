@@ -1,50 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SmartyPants Wallet</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background-color: #f0f8ff; }
+    #dashboard { display: none; }
+    input, select, button { margin: 5px; padding: 8px; }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+
+  <script>
+    // 🔐 Firebase config (replace with your own project settings)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
+
 <body>
-  <div class="container">
-    <h1>SmartyPants Wallet 💼</h1>
-    <div id="login">
-      <input id="username" placeholder="Name">
-      <select id="role">
-        <option value="student">Student</option>
-        <option value="teacher">Teacher</option>
-      </select>
-      <button onclick="login()">Login</button>
-    </div>
+  <h1>🧠 SmartyPants Wallet</h1>
 
-    <div id="dashboard" style="display:none;">
-      <p>Welcome, <span id="user-name"></span>!</p>
-      <p>Wallet Address: <span id="wallet-address"></span></p>
-      <p>SPK Balance: <span id="spk-balance">0</span></p>
-      <p>Kindness Points: <span id="kindness">0</span></p>
-      <p>BTC Earned: <span id="btc-balance">0</span></p>
+  <div id="auth">
+    <h3>Login or Register</h3>
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <select id="role">
+      <option value="student">Student</option>
+      <option value="teacher">Teacher</option>
+    </select><br />
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button><br>
+    <button onclick="loginWithGoogle()" style="background: #4285F4; color: white;">Sign in with Google</button>
+  </div>
 
-      <button onclick="showQuiz()">🧠 Quiz to Earn BTC</button>
-      <button onclick="earnKindness()">❤️ Do Kind Deed</button>
-      <button onclick="openShop()">🛍️ School Shop</button>
-      <button onclick="logout()">Logout</button>
-    </div>
+  <div id="dashboard">
+    <h2>Welcome, <span id="user-name"></span>!</h2>
+    <p><strong>Wallet:</strong> <span id="wallet-address"></span></p>
+    <p><strong>SPK:</strong> <span id="spk-balance">0</span></p>
+    <p><strong>BTC:</strong> <span id="btc-balance">0</span></p>
+    <p><strong>Kindness:</strong> <span id="kindness">0</span></p>
 
-    <div id="quiz" style="display:none;">
-      <h3>Quiz Time! What does BTC stand for?</h3>
-      <button onclick="answerQuiz(true)">Bitcoin</button>
-      <button onclick="answerQuiz(false)">Big Tall Carrots</button>
-    </div>
-
-    <div id="shop" style="display:none;">
-      <h3>🛒 School Shop</h3>
-      <button onclick="buyPerk('No Homework Pass', 10)">No Homework (10 SPK)</button>
-      <button onclick="buyPerk('Extra Play Time', 15)">Play Time (15 SPK)</button>
-      <button onclick="closeShop()">Close Shop</button>
-    </div>
+    <button onclick="earnKindness()">💖 Be Kind (+5 SPK)</button>
+    <button onclick="answerQuiz(true)">🧠 Answer Quiz Right (+0.0001 BTC)</button>
+    <button onclick="answerQuiz(false)">🧠 Answer Quiz Wrong</button>
+    <button onclick="buyPerk('Free Time Pass', 10)">🎁 Buy Free Time (10 SPK)</button>
+    <br><br>
+    <button onclick="logout()">🚪 Log Out</button>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
+
