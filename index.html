@@ -1,95 +1,71 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartyPants Wallet</title>
 
-// 🔐 Replace with your actual Firebase config!
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-
-// 🧠 Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-
-// 🎓 Sign in with Google
-window.signInWithGoogle = async function () {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    await setupUserDoc(user);
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-  }
-};
-
-// 💌 Email sign-in or register
-document.getElementById("email-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  try {
-    // Try to sign in
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    await setupUserDoc(result.user);
-  } catch (signInError) {
-    // If no account, try to register
-    try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      await setupUserDoc(result.user);
-    } catch (signUpError) {
-      console.error("Could not sign in or register:", signUpError);
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f0f4f8;
+      color: #333;
     }
-  }
-});
+    button {
+      background: #4caf50;
+      border: none;
+      padding: 10px 20px;
+      margin: 0.5rem 0;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      border-radius: 4px;
+    }
+    input, select {
+      padding: 10px;
+      margin: 0.25rem 0;
+      width: 100%;
+    }
+    #user-info {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
 
-// 🧾 Setup Firestore user doc
-async function setupUserDoc(user) {
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) {
-    await setDoc(userRef, {
-      name: user.displayName || "Email User",
-      email: user.email,
-      createdAt: new Date()
-    });
-    console.log("User document created.");
-  }
-}
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
+</head>
+<body>
 
-// 🚪 Sign out
-window.signOutUser = async function () {
-  await signOut(auth);
-};
+  <h1>Welcome to SmartyPants Wallet</h1>
 
-// 👀 Listen to login state
-onAuthStateChanged(auth, (user) => {
-  const userInfo = document.getElementById("user-info");
-  document.getElementById("sign-out-btn").style.display = user ? "inline-block" : "none";
-  document.getElementById("google-btn").style.display = user ? "none" : "inline-block";
-  document.getElementById("email-form").style.display = user ? "none" : "block";
+  <label for="role">I am a:</label>
+  <select id="role">
+    <option value="student" selected>Student</option>
+    <option value="teacher">Teacher</option>
+  </select>
 
-  userInfo.textContent = user
+  <button id="google-btn" onclick="signInWithGoogle()">Sign in with Google</button>
+
+  <h2>Or sign in with email</h2>
+  <form id="email-form">
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Sign in with Email</button>
+  </form>
+
+  <button id="sign-out-btn" onclick="signOutUser()" style="display:none;">Sign Out</button>
+
+  <div id="user-info">Not signed in</div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
+
     ? `Hello, ${user.displayName || "Email User"} (${user.email})`
     : "Not signed in";
 });
