@@ -17,12 +17,12 @@ import {
 
 // 🔐 Your Firebase config here
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAFI1haj8xAXQ3R70Sfn6q-4X9TYt2UrTs",
+  authDomain: "smartypants-kids-pointsystem.firebaseapp.com",
+  projectId: "smartypants-kids-pointsystem",
+  storageBucket: "smartypants-kids-pointsystem.firebasestorage.app",
+  messagingSenderId: "111102049554",
+  appId: "1:111102049554:web:8f8feb81d3a5813dcc07cb"
 };
 
 // 🔧 Firebase setup
