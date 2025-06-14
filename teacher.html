@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teacher Dashboard</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #fff7e6; padding: 2rem; }
+    h1 { color: #333; }
+    .alert { background: #ffe6e6; border: 1px solid #ff4444; padding: 1em; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Teacher Dashboard</h1>
+  <div id="alerts">Loading redemption requests...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFI1haj8xAXQ3R70Sfn6q-4X9TYt2UrTs",
+      authDomain: "smartypants-kids-pointsystem.firebaseapp.com",
+      projectId: "smartypants-kids-pointsystem",
+      storageBucket: "smartypants-kids-pointsystem.firebasestorage.app",
+      messagingSenderId: "111102049554",
+      appId: "1:111102049554:web:8f8feb81d3a5813dcc07cb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const alertsDiv = document.getElementById("alerts");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      onSnapshot(collection(db, "rewards"), (snapshot) => {
+        alertsDiv.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.status === "pending") {
+            const div = document.createElement("div");
+            div.className = "alert";
+            div.innerHTML = `
+              <strong>${data.name}</strong> wants to redeem <strong>${data.reward}</strong><br>
+              <button onclick="approveReward('${docSnap.id}')">Approve</button>
+            `;
+            alertsDiv.appendChild(div);
+          }
+        });
+      });
+    });
+
+    window.approveReward = async function (rewardId) {
+      const rewardRef = doc(db, "rewards", rewardId);
+      await updateDoc(rewardRef, { status: "approved" });
+      alert("Reward approved!");
+    };
+  </script>
+</body>
+</html>
