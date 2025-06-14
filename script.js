@@ -1,78 +1,133 @@
-let user = {};
+const auth = firebase.auth();
+const db = firebase.firestore();
+let user = null;
 
-function generateWallet() {
-  return 'SPK-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+async function register() {
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
+  const role = document.getElementById("role").value;
+
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
+
+    await db.collection("users").doc(uid).set({
+      email,
+      role,
+      wallet: generateWallet(),
+      spk: 20,
+      kindness: 0,
+      btc: 0
+    });
+
+    alert("Registered! You can now log in.");
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
 }
 
-function login() {
-  const name = document.getElementById('username').value;
-  const role = document.getElementById('role').value;
-  if (!name) return alert("Enter your name!");
+async function login() {
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
 
-  user = {
-    name,
-    role,
-    wallet: generateWallet(),
-    spk: 20,
-    kindness: 0,
-    btc: 0,
-  };
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
+    const doc = await db.collection("users").doc(uid).get();
 
-  document.getElementById('login').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  updateUI();
+    user = { uid, ...doc.data() };
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    updateUI();
+  } catch (err) {
+    alert("Login failed: " + err.message);
+  }
+}
+
+async function loginWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const result = await auth.signInWithPopup(provider);
+    const uid = result.user.uid;
+    const docRef = db.collection("users").doc(uid);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      const role = prompt("Are you a student or teacher?");
+      await docRef.set({
+        email: result.user.email,
+        role: role || "student",
+        wallet: generateWallet(),
+        spk: 20,
+        kindness: 0,
+        btc: 0
+      });
+    }
+
+    const userDoc = await docRef.get();
+    user = { uid, ...userDoc.data() };
+
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    updateUI();
+  } catch (err) {
+    alert("Google Sign-In Failed: " + err.message);
+  }
+}
+
+function logout() {
+  auth.signOut();
+  user = null;
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("auth").style.display = "block";
+}
+
+function generateWallet() {
+  return "SPK-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
 function updateUI() {
-  document.getElementById('user-name').innerText = user.name;
-  document.getElementById('wallet-address').innerText = user.wallet;
-  document.getElementById('spk-balance').innerText = user.spk;
-  document.getElementById('kindness').innerText = user.kindness;
-  document.getElementById('btc-balance').innerText = user.btc;
+  document.getElementById("user-name").innerText = user.email;
+  document.getElementById("wallet-address").innerText = user.wallet;
+  document.getElementById("spk-balance").innerText = user.spk;
+  document.getElementById("btc-balance").innerText = user.btc;
+  document.getElementById("kindness").innerText = user.kindness;
 }
 
-function showQuiz() {
-  document.getElementById('quiz').style.display = 'block';
+async function earnKindness() {
+  user.kindness += 1;
+  user.spk += 5;
+  await db.collection("users").doc(user.uid).update({
+    kindness: user.kindness,
+    spk: user.spk
+  });
+  updateUI();
+  alert("Kind deed! +5 SPK");
 }
 
-function answerQuiz(correct) {
-  document.getElementById('quiz').style.display = 'none';
+async function answerQuiz(correct) {
   if (correct) {
     user.btc += 0.0001;
-    alert("✅ Correct! You earned 0.0001 BTC.");
+    await db.collection("users").doc(user.uid).update({
+      btc: user.btc
+    });
+    alert("Correct! +0.0001 BTC");
   } else {
-    alert("❌ Oops! Try again next time.");
+    alert("Oops! Try again.");
   }
   updateUI();
 }
 
-function earnKindness() {
-  user.kindness += 1;
-  user.spk += 5;
-  alert("You earned 5 SPK for being kind!");
-  updateUI();
-}
-
-function openShop() {
-  document.getElementById('shop').style.display = 'block';
-}
-
-function closeShop() {
-  document.getElementById('shop').style.display = 'none';
-}
-
-function buyPerk(item, cost) {
+async function buyPerk(item, cost) {
   if (user.spk >= cost) {
     user.spk -= cost;
-    alert(`You bought: ${item}`);
+    await db.collection("users").doc(user.uid).update({
+      spk: user.spk
+    });
     updateUI();
+    alert("You bought: " + item);
   } else {
     alert("Not enough SPK!");
   }
 }
 
-function logout() {
-  user = {};
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('login').style.display = 'block';
-}
