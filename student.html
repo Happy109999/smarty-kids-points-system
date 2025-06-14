@@ -1,66 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Student Dashboard</title>
+  <title>Student Dashboard – SmartyPants Wallet</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f0f4f8;
+      font-family: Arial, sans-serif;
+      background-color: #f0f8ff;
       padding: 2rem;
     }
     h1 {
       color: #333;
     }
+    .info {
+      background: #e6f7ff;
+      border: 1px solid #91d5ff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
-  <h1>Student Dashboard</h1>
-  <div id="student-info">Loading...</div>
+  <h1>🎓 Student Dashboard</h1>
+
+  <div class="info">
+    <p><strong>Name:</strong> <span id="student-name">Loading...</span></p>
+    <p><strong>Email:</strong> <span id="student-email">Loading...</span></p>
+    <p><strong>Role:</strong> <span id="student-role">Loading...</span></p>
+    <p><strong>SPK Balance:</strong> <span id="spk-balance">Loading...</span> SmartyCoins</p>
+  </div>
+
+  <button id="buy-reward">🎁 Buy Reward (10 SPK)</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
     import {
       getFirestore,
       doc,
-      getDoc
+      getDoc,
+      updateDoc,
+      setDoc
     } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
+    // 🧠 Your Firebase config
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyAFI1haj8xAXQ3R70Sfn6q-4X9TYt2UrTs",
+      authDomain: "smartypants-kids-pointsystem.firebaseapp.com",
+      projectId: "smartypants-kids-pointsystem",
+      storageBucket: "smartypants-kids-pointsystem.firebasestorage.app",
+      messagingSenderId: "111102049554",
+      appId: "1:111102049554:web:8f8feb81d3a5813dcc07cb"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        const data = userSnap.data();
+    const nameSpan = document.getElementById("student-name");
+    const emailSpan = document.getElementById("student-email");
+    const roleSpan = document.getElementById("student-role");
+    const balanceSpan = document.getElementById("spk-balance");
+    const rewardButton = document.getElementById("buy-reward");
 
-        document.getElementById("student-info").innerHTML = `
-          <p><strong>Name:</strong> ${data.name}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
-          <p><strong>Role:</strong> ${data.role}</p>
-          <p><strong>SPK Balance:</strong> 0 SmartyCoins</p>
-        `;
-      } else {
+    let currentUser;
+    let currentData;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
         window.location.href = "index.html";
+        return;
       }
+
+      currentUser = user;
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        alert("No student data found.");
+        return;
+      }
+
+      currentData = userSnap.data();
+
+      nameSpan.textContent = currentData.name || "Student";
+      emailSpan.textContent = currentData.email || user.email;
+      roleSpan.textContent = currentData.role || "student";
+      balanceSpan.textContent = currentData.spkBalance ?? 0;
+
+      // Enable the button now that data is loaded
+      rewardButton.disabled = false;
     });
-  </script>
-</body>
-</html>
+
+    rewardButton.addEventListener("click", async () =
+
