@@ -1,133 +1,70 @@
-const auth = firebase.auth();
-const db = firebase.firestore();
-let user = null;
+// Firebase SDK imports for module usage
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-async function register() {
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("password").value;
-  const role = document.getElementById("role").value;
+// Your Firebase config - REPLACE these with your own project's values!
+const firebaseConfig = {
+  apiKey: "AIzaSyAFI1haj8xAXQ3R70Sfn6q-4X9TYt2UrTs",
+  authDomain: "smartypants-kids-pointsystem.firebaseapp.com",
+  projectId: "smartypants-kids-pointsystem",
+  storageBucket: "smartypants-kids-pointsystem.firebasestorage.app",
+  messagingSenderId: "111102049554",
+  appId: "1:111102049554:web:8f8feb81d3a5813dcc07cb"
+};
 
+// Initialize Firebase app and services
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// Sign in with Google popup
+export async function signInWithGoogle() {
   try {
-    const cred = await auth.createUserWithEmailAndPassword(email, pass);
-    const uid = cred.user.uid;
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    console.log("Signed in:", user.email);
 
-    await db.collection("users").doc(uid).set({
-      email,
-      role,
-      wallet: generateWallet(),
-      spk: 20,
-      kindness: 0,
-      btc: 0
-    });
+    // Create user document if doesn't exist
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-    alert("Registered! You can now log in.");
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-
-async function login() {
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("password").value;
-
-  try {
-    const cred = await auth.signInWithEmailAndPassword(email, pass);
-    const uid = cred.user.uid;
-    const doc = await db.collection("users").doc(uid).get();
-
-    user = { uid, ...doc.data() };
-    document.getElementById("auth").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-    updateUI();
-  } catch (err) {
-    alert("Login failed: " + err.message);
-  }
-}
-
-async function loginWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    const result = await auth.signInWithPopup(provider);
-    const uid = result.user.uid;
-    const docRef = db.collection("users").doc(uid);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      const role = prompt("Are you a student or teacher?");
-      await docRef.set({
-        email: result.user.email,
-        role: role || "student",
-        wallet: generateWallet(),
-        spk: 20,
-        kindness: 0,
-        btc: 0
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        name: user.displayName,
+        email: user.email,
+        createdAt: new Date()
       });
+      console.log("User document created.");
+    } else {
+      console.log("User document exists.");
     }
-
-    const userDoc = await docRef.get();
-    user = { uid, ...userDoc.data() };
-
-    document.getElementById("auth").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-    updateUI();
-  } catch (err) {
-    alert("Google Sign-In Failed: " + err.message);
+  } catch (error) {
+    console.error("Google sign-in error:", error);
   }
 }
 
-function logout() {
-  auth.signOut();
-  user = null;
-  document.getElementById("dashboard").style.display = "none";
-  document.getElementById("auth").style.display = "block";
+// Sign out user
+export async function signOutUser() {
+  await signOut(auth);
+  console.log("User signed out");
 }
 
-function generateWallet() {
-  return "SPK-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-}
+// Listen for auth state changes and update UI
+onAuthStateChanged(auth, (user) => {
+  const userInfoEl = document.getElementById("user-info");
+  const signInBtn = document.getElementById("sign-in-btn");
+  const signOutBtn = document.getElementById("sign-out-btn");
 
-function updateUI() {
-  document.getElementById("user-name").innerText = user.email;
-  document.getElementById("wallet-address").innerText = user.wallet;
-  document.getElementById("spk-balance").innerText = user.spk;
-  document.getElementById("btc-balance").innerText = user.btc;
-  document.getElementById("kindness").innerText = user.kindness;
-}
-
-async function earnKindness() {
-  user.kindness += 1;
-  user.spk += 5;
-  await db.collection("users").doc(user.uid).update({
-    kindness: user.kindness,
-    spk: user.spk
-  });
-  updateUI();
-  alert("Kind deed! +5 SPK");
-}
-
-async function answerQuiz(correct) {
-  if (correct) {
-    user.btc += 0.0001;
-    await db.collection("users").doc(user.uid).update({
-      btc: user.btc
-    });
-    alert("Correct! +0.0001 BTC");
+  if (user) {
+    userInfoEl.textContent = `Hello, ${user.displayName} (${user.email})`;
+    signInBtn.style.display = "none";
+    signOutBtn.style.display = "inline-block";
   } else {
-    alert("Oops! Try again.");
+    userInfoEl.textContent = "Not signed in";
+    signInBtn.style.display = "inline-block";
+    signOutBtn.style.display = "none";
   }
-  updateUI();
-}
-
-async function buyPerk(item, cost) {
-  if (user.spk >= cost) {
-    user.spk -= cost;
-    await db.collection("users").doc(user.uid).update({
-      spk: user.spk
-    });
-    updateUI();
-    alert("You bought: " + item);
-  } else {
-    alert("Not enough SPK!");
-  }
-}
+});
 
